@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { parseISO, format } from 'date-fns';
 
 import income from '../../assets/income.svg';
 import outcome from '../../assets/outcome.svg';
@@ -36,30 +35,26 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     async function loadTransactions(): Promise<void> {
-      const response = await api.get('transactions');
+      const response = await api.get('/transactions');
 
-      const formatedTransactions = response.data.transactions.map(
+      const transactionFormattedToBRL = response.data.transactions.map(
         (transaction: Transaction) => ({
           ...transaction,
-          formattedValue:
-            transaction.type === 'outcome'
-              ? `- ${formatValue(transaction.value)}`
-              : formatValue(transaction.value),
-          formattedDate: format(
-            parseISO(String(transaction.created_at)),
-            'MM/dd/yyyy',
+          formattedValue: formatValue(transaction.value),
+          formattedDate: new Date(transaction.created_at).toLocaleDateString(
+            'pt-br',
           ),
         }),
       );
 
-      const formatedBalance = {
+      const balanceFormattedToBRL = {
         income: formatValue(response.data.balance.income),
         outcome: formatValue(response.data.balance.outcome),
         total: formatValue(response.data.balance.total),
       };
 
-      setTransactions(formatedTransactions);
-      setBalance(formatedBalance);
+      setTransactions(transactionFormattedToBRL);
+      setBalance(balanceFormattedToBRL);
     }
 
     loadTransactions();
@@ -105,10 +100,11 @@ const Dashboard: React.FC = () => {
             </thead>
 
             <tbody>
-              {transactions.map((transaction) => (
+              {transactions.map(transaction => (
                 <tr key={transaction.id}>
                   <td className="title">{transaction.title}</td>
                   <td className={transaction.type}>
+                    {transaction.type === 'outcome' && ' - '}
                     {transaction.formattedValue}
                   </td>
                   <td>{transaction.category.title}</td>
